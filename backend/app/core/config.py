@@ -60,8 +60,6 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "noreply@ims.local"
     EMAIL_DAILY_LIMIT: int = 100
 
-    # Storage
-    ENCRYPTED_STORAGE_DIR: str = str(BACKEND_DIR / "storage" / "encrypted_docs")
     # Storage (LOCAL or DROPBOX)
     STORAGE_BACKEND: str = "LOCAL"  # Set to "DROPBOX" on Render production
     ENCRYPTED_STORAGE_DIR: str = str(BACKEND_DIR / "storage" / "encrypted_docs")
