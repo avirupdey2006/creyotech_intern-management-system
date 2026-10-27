@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+backend/storage/encrypted_docs/*.enc
+sample_generated_pdfs/
+node_modules/
+frontend/.next/
+frontend/out/
+nginx/certs/*.key
+nginx/certs/*.crt

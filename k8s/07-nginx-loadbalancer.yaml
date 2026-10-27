@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ims-nginx-loadbalancer
+  namespace: ims-production
+spec:
+  type: LoadBalancer
+  selector:
+    app: ims-nginx-gateway
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ims-nginx-gateway
+  namespace: ims-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ims-nginx-gateway
+  template:
+    metadata:
+      labels:
+        app: ims-nginx-gateway
+    spec:
+      containers:
+        - name: nginx
+          image: ims-nginx-lb:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: tls-certs
+              mountPath: /etc/nginx/certs
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /nginx-health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: ims-nginx-config
+        - name: tls-certs
+          secret:
+            secretName: ims-tls-secret

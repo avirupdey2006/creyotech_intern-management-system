@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ims-kafka-worker
+  namespace: ims-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ims-kafka-worker
+  template:
+    metadata:
+      labels:
+        app: ims-kafka-worker
+    spec:
+      containers:
+        - name: kafka-worker
+          image: ims-backend:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.workers.kafka_consumer"]
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "ims-kafka-service:9092"
+            - name: ENCRYPTED_STORAGE_DIR
+              value: "/app/storage/encrypted_docs"
+          envFrom:
+            - configMapRef:
+                name: ims-config
+            - secretRef:
+                name: ims-secrets
+          volumeMounts:
+            - name: encrypted-storage
+              mountPath: /app/storage
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "192Mi"
+            limits:
+              cpu: "300m"
+              memory: "384Mi"
+      volumes:
+        - name: encrypted-storage
+          persistentVolumeClaim:
+            claimName: ims-encrypted-docs-pvc

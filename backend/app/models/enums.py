@@ -1,0 +1,28 @@
+import enum
+
+
+class UserRole(str, enum.Enum):
+    CANDIDATE = "CANDIDATE"
+    HR_REVIEWER = "HR_REVIEWER"
+    ADMIN = "ADMIN"
+
+
+class ApplicationStatus(str, enum.Enum):
+    SUBMITTED = "SUBMITTED"
+    IDENTITY_VERIFIED = "IDENTITY_VERIFIED"
+    PROVISIONAL_APPROVED = "PROVISIONAL_APPROVED"
+    FINAL_APPROVED = "FINAL_APPROVED"
+    COMPLETED = "COMPLETED"
+    REJECTED = "REJECTED"
+
+
+class VerificationStatus(str, enum.Enum):
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    PENDING = "PENDING"
+
+
+class DocumentType(str, enum.Enum):
+    PROVISIONAL_OFFER = "PROVISIONAL_OFFER"
+    FINAL_OFFER = "FINAL_OFFER"
+    COMPLETION_CERTIFICATE = "COMPLETION_CERTIFICATE"

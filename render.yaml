@@ -1,0 +1,41 @@
+services:
+  # 1. FastAPI Backend API Service (Dockerized on Render)
+  - type: web
+    name: creyotech-ims-backend
+    runtime: docker
+    region: ohio
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: strict
+      - key: STORAGE_BACKEND
+        value: DROPBOX
+      - key: DROPBOX_FOLDER_PATH
+        value: /IMS_Encrypted_Vault
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: PII_ENCRYPTION_KEY
+        sync: false
+      - key: HMAC_SIGNING_SECRET
+        generateValue: true
+      - key: DROPBOX_APP_KEY
+        sync: false
+      - key: DROPBOX_APP_SECRET
+        sync: false
+      - key: DROPBOX_REFRESH_TOKEN
+        sync: false
+      - key: FRONTEND_BASE_URL
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        sync: false

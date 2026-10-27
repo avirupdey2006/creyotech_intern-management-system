@@ -1,0 +1,100 @@
+name: CREYOTECH IMS - CI/CD & Docker Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Backend Automated Tests (FastAPI + Cryptography + RBAC + E2E)
+  # ---------------------------------------------------------------------------
+  backend-ci:
+    name: Backend Pytest Suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Canonical Pytest Suite
+        env:
+          ENVIRONMENT: development
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          PII_ENCRYPTION_KEY: ${{ secrets.PII_ENCRYPTION_KEY }}
+          HMAC_SIGNING_SECRET: ${{ secrets.HMAC_SIGNING_SECRET }}
+          STORAGE_BACKEND: LOCAL
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            alembic upgrade head
+            python scripts/seed_and_verify_phase1.py
+            pytest -v
+          else
+            pytest -v tests/test_document_encryption.py
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 2. Frontend Type-Check & Production Next.js Build
+  # ---------------------------------------------------------------------------
+  frontend-ci:
+    name: Frontend TypeScript & Next.js Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run TypeScript Type-Check
+        run: npm run type-check
+
+      - name: Build Production Next.js Bundle
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # 3. Multi-Stage Docker Image Build Verification
+  # ---------------------------------------------------------------------------
+  docker-build:
+    name: Verify Multi-Stage Docker Images
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        run: docker build -t ims-backend:ci ./backend
+
+      - name: Build Frontend Docker Image
+        run: docker build -t ims-frontend:ci ./frontend
